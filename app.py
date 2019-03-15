@@ -33,6 +33,17 @@ class CarInformation(db.Model):
     self.cleanTitle = cleanTitle
     self.notes = notes
 
+class CarExpenses(db.Model):
+  id = db.Column(db.Integer, primary_key=True)
+  carInformationId = db.Column(db.Numeric(asdecimal=False, decimal_return_scale=None))
+  cost = db.Column(db.String(50))
+  expense = db.Column(db.String(120))
+
+  def __init__(self, carInformationId, cost, expense):
+    self.carInformationId = carInformationId
+    self.cost = cost
+    self.expense = expense
+
 @app.route('/upload', methods=['POST', 'GET'])
 def upload():
   if request.method == 'POST':
@@ -42,7 +53,6 @@ def upload():
     cost = request.form['cost']
     cleanTitle = request.form['cleanTitle']
     notes = request.form['notes']
-    # images = request.files['file']
 
     if cleanTitle == 'true':
       cleanTitle = True
@@ -106,3 +116,30 @@ def loadCarImages(carId):
 
   return json.dumps(carImages)
 
+
+@app.route('/createexpense/<int:carId>', methods=['POST'])
+def createExpense(carId):
+  carInformationId = carId
+  cost = request.form['cost']
+  expense = request.form['expense']
+
+  CarExpense = CarExpenses(carInformationId, cost, expense)
+  db.session.add(CarExpense)
+  db.session.commit()
+
+  return 'Success'
+
+@app.route('/loadexpenses/<int:carId>')
+def loadExpenses(carId):
+  carExpense = CarExpenses.query.filter_by(carInformationId=carId).all()
+  result = []
+
+  for row in carExpense:
+    result.append({
+      'expenseId': row.id,
+      'carInformationId': int(row.carInformationId),
+      'cost': row.cost,
+      'expense': row.expense,
+    })
+
+  return json.dumps(result)
