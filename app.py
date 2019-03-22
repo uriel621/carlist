@@ -143,3 +143,62 @@ def loadExpenses(carId):
     })
 
   return json.dumps(result)
+
+@app.route('/deleteexpense/<int:expenseId>', methods=['POST'])
+def deleteExpense(expenseId):
+  print('expenseId', expenseId)
+  carExpenseId = CarExpenses.query.get(expenseId)
+  db.session.delete(carExpenseId)
+  db.session.commit()
+
+  return 'Success'
+
+@app.route('/updatecarinfo/<int:carId>', methods=['POST'])
+def updateCarInfo(carId):
+  year = request.form['year']
+  brand = request.form['brand']
+  model = request.form['model']
+  cost = request.form['cost']
+  cleanTitle = request.form['cleanTitle']
+  notes = request.form['notes']
+
+  if cleanTitle == 'true':
+    cleanTitle = True
+  elif cleanTitle == 'false': 
+    cleanTitle = False
+
+  carInfo = CarInformation.query.get(carId)
+
+  carInfo.year = int(year)
+  carInfo.brand = brand
+  carInfo.model = model
+  carInfo.cost = cost
+  carInfo.cleanTitle = cleanTitle
+  carInfo.notes = notes
+
+  db.session.commit()
+  
+  # session.query().filter(carInfo.brand == 'test').update({"no_of_logins": (User.no_of_logins +1)})
+  # session.commit()
+
+  # carInfo = CarInformation.query.filter_by(carId=carId)
+  # db.session.update({"nameOfRow??": 'value'})
+  # session.commit()
+  # session.query().filter(User.username == form.username.data).update({"no_of_logins": (User.no_of_logins +1)})
+  return 'hi'
+
+
+@app.route('/deleteimage', methods=['POST'])
+def deleteImage():
+  imagePath = request.form['path']
+  folderPath = imagePath.rsplit('/', 1)[0]
+  dirContents = os.listdir(folderPath)
+
+  if len(dirContents) == 1:
+    print('Cant remove if only one image')
+  elif len(dirContents) == 0:
+    os.rmdir(folderPath)
+  else:
+    os.remove(imagePath)
+
+  return 'test'
