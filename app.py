@@ -129,6 +129,24 @@ def createExpense(carId):
 
   return 'Success'
 
+@app.route('/updateexpense/<int:expenseId>', methods=['POST'])
+def updateExpense(expenseId):
+  cost = request.form['cost']
+  expense = request.form['expense']
+
+  CarExpense = CarExpenses.query.get(expenseId)
+
+  print('cost-->', cost)
+  print('expense-->', expense)
+  print('expenseId', expenseId)
+  print('CarExpense', CarExpense)
+  CarExpense.cost = cost
+  CarExpense.expense = expense
+
+  db.session.commit()
+
+  return 'Success'
+
 @app.route('/loadexpenses/<int:carId>')
 def loadExpenses(carId):
   carExpense = CarExpenses.query.filter_by(carInformationId=carId).all()
@@ -177,7 +195,7 @@ def updateCarInfo(carId):
   carInfo.notes = notes
 
   db.session.commit()
-  
+
   # session.query().filter(carInfo.brand == 'test').update({"no_of_logins": (User.no_of_logins +1)})
   # session.commit()
 
