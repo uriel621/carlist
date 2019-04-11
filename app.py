@@ -220,3 +220,12 @@ def deleteImage():
     os.remove(imagePath)
 
   return 'test'
+
+@app.route('/deleteCar/<int:carId>', methods=['POST'])
+def deleteCar(carId):
+  carInfo = CarInformation.query.get(carId)
+  # db.session.delete(carInfo)
+  # db.session.commit()
+
+  # delete expenses and imahes
+  return 'test'
