@@ -85,7 +85,7 @@ def upload():
       car_list = []
       cars_directory = os.listdir('./images/cars/{}'.format(row.id))
       for link in cars_directory:
-          car_list.append('http://127.0.0.1:5000/images/cars/{}/{}'.format(row.id, link))
+          car_list.append('./images/cars/{}/{}'.format(row.id, link))
       location['images'] = car_list
       result.append(location)
 
@@ -112,7 +112,7 @@ def loadCarImages(carId):
   }
   cars_directory = os.listdir('./images/cars/{}'.format(carId))
   for link in cars_directory:
-      carImages['images'].append('http://127.0.0.1:5000/images/cars/{}/{}'.format(carId, link))
+      carImages['images'].append('./images/cars/{}/{}'.format(carId, link))
 
   return json.dumps(carImages)
 
@@ -126,7 +126,6 @@ def createExpense(carId):
   CarExpense = CarExpenses(carInformationId, cost, expense)
   db.session.add(CarExpense)
   db.session.commit()
-
   return 'Success'
 
 @app.route('/updateexpense/<int:expenseId>', methods=['POST'])
@@ -135,11 +134,6 @@ def updateExpense(expenseId):
   expense = request.form['expense']
 
   CarExpense = CarExpenses.query.get(expenseId)
-
-  print('cost-->', cost)
-  print('expense-->', expense)
-  print('expenseId', expenseId)
-  print('CarExpense', CarExpense)
   CarExpense.cost = cost
   CarExpense.expense = expense
 
@@ -223,9 +217,19 @@ def deleteImage():
 
 @app.route('/deleteCar/<int:carId>', methods=['POST'])
 def deleteCar(carId):
+  carExpense = CarExpenses.query.filter_by(carInformationId=carId).all()
+  for row in carExpense:
+    db.session.delete(row)
+  
   carInfo = CarInformation.query.get(carId)
-  # db.session.delete(carInfo)
-  # db.session.commit()
+  db.session.delete(carInfo)
+  db.session.commit()
 
-  # delete expenses and imahes
+  cars_directory = os.listdir('./images/cars/{}'.format(carId))
+  for link in cars_directory:
+    print('./images/cars/{}/{}'.format(carId, link))
+    os.remove('./images/cars/{}/{}'.format(carId, link))
+
+  os.rmdir('./images/cars/{}'.format(carId))
+
   return 'test'
