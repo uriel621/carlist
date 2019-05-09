@@ -7,8 +7,17 @@ import pymysql
 pymysql.install_as_MySQLdb()
 
 app = Flask(__name__, static_folder='./images')
-# dialect+driver://username:password@host:port/database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/test'
+
+# FOR SERVER
+server_path = '/home/uriel621/be-carlist/images/cars'
+appended_link = 'http://uriel.sellingcrap.com/images/cars'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uriel621:mercerst@uriel621.mysql.pythonanywhere-services.com/uriel621$cars'
+
+# # FOR DEV
+# server_path = './images/cars'
+# appended_link = 'http://localhost:5000/images/cars'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/test'
+
 db = SQLAlchemy(app)
 CORS(app)
 
@@ -56,17 +65,21 @@ def upload():
 
     if cleanTitle == 'true':
       cleanTitle = True
-    elif cleanTitle == 'false': 
+    elif cleanTitle == 'false':
       cleanTitle = False
 
     CarInfo = CarInformation(year, brand, model, cost, cleanTitle, notes)
     db.session.add(CarInfo)
     db.session.commit()
 
+    print('before')
     lastCarInfoId = CarInformation.query.order_by(CarInformation.id.desc()).first().id
-    os.makedirs('./images/cars/{}'.format(lastCarInfoId))
+
+    path = '{}/{}'.format(server_path, lastCarInfoId)
+    os.makedirs(path)
+
     for img in request.files:
-      request.files[img].save('./images/cars/{}/{}'.format(lastCarInfoId, request.files[img].filename))
+      request.files[img].save('{}/{}/{}'.format(server_path, lastCarInfoId, request.files[img].filename))
 
     return 'Success'
 
@@ -83,9 +96,9 @@ def upload():
       location['cleanTitle'] = row.cleanTitle
       location['notes'] = row.notes
       car_list = []
-      cars_directory = os.listdir('./images/cars/{}'.format(row.id))
+      cars_directory = os.listdir('{}/{}'.format(server_path, row.id))
       for link in cars_directory:
-          car_list.append('./images/cars/{}/{}'.format(row.id, link))
+          car_list.append('{}/{}/{}'.format(appended_link, row.id, link))
       location['images'] = car_list
       result.append(location)
 
@@ -110,9 +123,9 @@ def loadCarImages(carId):
   carImages = {
     'images': []
   }
-  cars_directory = os.listdir('./images/cars/{}'.format(carId))
+  cars_directory = os.listdir('{}/{}'.format(server_path, carId))
   for link in cars_directory:
-      carImages['images'].append('./images/cars/{}/{}'.format(carId, link))
+      carImages['images'].append('{}/{}/{}'.format(appended_link, carId, link))
 
   return json.dumps(carImages)
 
@@ -176,7 +189,7 @@ def updateCarInfo(carId):
 
   if cleanTitle == 'true':
     cleanTitle = True
-  elif cleanTitle == 'false': 
+  elif cleanTitle == 'false':
     cleanTitle = False
 
   carInfo = CarInformation.query.get(carId)
@@ -220,7 +233,7 @@ def deleteCar(carId):
   carExpense = CarExpenses.query.filter_by(carInformationId=carId).all()
   for row in carExpense:
     db.session.delete(row)
-  
+
   carInfo = CarInformation.query.get(carId)
   db.session.delete(carInfo)
   db.session.commit()
@@ -233,3 +246,4 @@ def deleteCar(carId):
   os.rmdir('./images/cars/{}'.format(carId))
 
   return 'test'
+  
