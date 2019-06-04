@@ -3,6 +3,7 @@ from flask import Flask, json, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import pymysql
+from PIL import Image
 
 pymysql.install_as_MySQLdb()
 
@@ -33,14 +34,18 @@ class CarInformation(db.Model):
   cost = db.Column(db.String(50))
   cleanTitle = db.Column(db.Boolean, default=False)
   notes = db.Column(db.String(120))
+  sold = db.Column(db.Boolean, default=False)
+  priceSold = db.Column(db.String(50), default=0)
 
-  def __init__(self, year, brand, model, cost, cleanTitle, notes):
+  def __init__(self, year, brand, model, cost, cleanTitle, notes, sold, priceSold):
     self.year = year
     self.brand = brand
     self.model = model
     self.cost = cost
     self.cleanTitle = cleanTitle
     self.notes = notes
+    self.sold = sold
+    self.priceSold = priceSold
 
 class CarExpenses(db.Model):
   id = db.Column(db.Integer, primary_key=True)
@@ -72,14 +77,15 @@ def upload():
     db.session.add(CarInfo)
     db.session.commit()
 
-    print('before')
     lastCarInfoId = CarInformation.query.order_by(CarInformation.id.desc()).first().id
 
     path = '{}/{}'.format(server_path, lastCarInfoId)
     os.makedirs(path)
 
     for img in request.files:
-      request.files[img].save('{}/{}/{}'.format(server_path, lastCarInfoId, request.files[img].filename))
+      im = Image.open(request.files[img])
+      saved_path = '{}/{}/{}'.format(server_path, lastCarInfoId, request.files[img].filename)
+      im.save(saved_path, optimize=True, quality=25)
 
     return 'Success'
 
@@ -247,3 +253,27 @@ def deleteCar(carId):
 
   return 'test'
   
+@app.route('/carstatus/<int:carId>')
+def carStatus(carId):
+  carInfo = CarInformation.query.get(carId)
+
+  carStatus = {
+    'sold': carInfo.sold,
+    'priceSold': carInfo.priceSold,
+  }
+
+  return json.dumps(carStatus)
+
+
+@app.route('/updatecarstatus/<int:carId>', methods=['POST'])
+def updateCarStatus(carId):
+  price_sold = request.json['priceSold']
+  sold_status = request.json['soldStatus']
+
+  carInfo = CarInformation.query.get(carId)
+
+  carInfo.priceSold = int(price_sold)
+  carInfo.sold = sold_status
+
+  db.session.commit()
+  return 'test'
