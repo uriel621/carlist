@@ -9,15 +9,15 @@ pymysql.install_as_MySQLdb()
 
 app = Flask(__name__, static_folder='./images')
 
-# FOR SERVER
-server_path = '/home/uriel621/be-carlist/images/cars'
-appended_link = 'http://uriel.sellingcrap.com/images/cars'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uriel621:mercerst@uriel621.mysql.pythonanywhere-services.com/uriel621$cars'
+# # FOR SERVER
+# server_path = '/home/uriel621/be-carlist/images/cars'
+# appended_link = 'http://uriel.sellingcrap.com/images/cars'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uriel621:mercerst@uriel621.mysql.pythonanywhere-services.com/uriel621$cars'
 
-# # FOR DEV
-# server_path = './images/cars'
-# appended_link = 'http://localhost:5000/images/cars'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/test'
+# FOR DEV
+server_path = './images/cars'
+appended_link = 'http://localhost:5000/images/cars'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/test'
 
 db = SQLAlchemy(app)
 CORS(app)
@@ -36,8 +36,10 @@ class CarInformation(db.Model):
   notes = db.Column(db.String(120))
   sold = db.Column(db.Boolean, default=False)
   priceSold = db.Column(db.String(50), default=0)
+  yearSold = db.Column(db.Integer)
+  partner = db.Column(db.String(50))
 
-  def __init__(self, year, brand, model, cost, cleanTitle, notes, sold, priceSold):
+  def __init__(self, year, brand, model, cost, cleanTitle, notes, sold, priceSold, yearSold, partner):
     self.year = year
     self.brand = brand
     self.model = model
@@ -45,7 +47,8 @@ class CarInformation(db.Model):
     self.cleanTitle = cleanTitle
     self.notes = notes
     self.sold = sold
-    self.priceSold = priceSold
+    self.yearSold = yearSold
+    self.partner = partner
 
 class CarExpenses(db.Model):
   id = db.Column(db.Integer, primary_key=True)
@@ -67,13 +70,21 @@ def upload():
     cost = request.form['cost']
     cleanTitle = request.form['cleanTitle']
     notes = request.form['notes']
+    partner = request.form['partner']
 
     if cleanTitle == 'true':
       cleanTitle = True
     elif cleanTitle == 'false':
       cleanTitle = False
 
-    CarInfo = CarInformation(year, brand, model, cost, cleanTitle, notes, sold = False, priceSold = "0")
+    if partner != 'admin' and partner != 'Omar' and partner != 'David':
+      return 'DENIED'
+
+    sold = False
+    priceSold = '0'
+    yearSold = 0
+  
+    CarInfo = CarInformation(year, brand, model, cost, cleanTitle, notes, sold, priceSold, yearSold, partner)
     db.session.add(CarInfo)
     db.session.commit()
 
@@ -120,6 +131,7 @@ def loadCarDetails(carId):
     'cost': carInfo.cost,
     'cleanTitle': carInfo.cleanTitle,
     'notes': carInfo.notes,
+    'partner': carInfo.partner
   }
 
   return json.dumps(car)
@@ -192,6 +204,7 @@ def updateCarInfo(carId):
   cost = request.form['cost']
   cleanTitle = request.form['cleanTitle']
   notes = request.form['notes']
+  partner = request.form['partner']
 
   if cleanTitle == 'true':
     cleanTitle = True
@@ -199,13 +212,14 @@ def updateCarInfo(carId):
     cleanTitle = False
 
   carInfo = CarInformation.query.get(carId)
-
+  print('carInfo--->>>', carInfo)
   carInfo.year = int(year)
   carInfo.brand = brand
   carInfo.model = model
   carInfo.cost = cost
   carInfo.cleanTitle = cleanTitle
   carInfo.notes = notes
+  carInfo.partner = partner
 
   db.session.commit()
 
@@ -258,7 +272,9 @@ def carStatus(carId):
 
   carStatus = {
     'sold': carInfo.sold,
+    'partner': carInfo.partner,
     'priceSold': carInfo.priceSold,
+    'yearSold': carInfo.yearSold,
   }
 
   return json.dumps(carStatus)
@@ -267,16 +283,56 @@ def carStatus(carId):
 @app.route('/updatecarstatus/<int:carId>', methods=['POST'])
 def updateCarStatus(carId):
   price_sold = request.json['priceSold']
+  year_sold = request.json['yearSold']
   sold_status = request.json['soldStatus']
-
+  
   carInfo = CarInformation.query.get(carId)
 
-  carInfo.priceSold = int(price_sold)
-  carInfo.sold = sold_status
+  if bool(sold_status) == False:
+    carInfo.sold = False
+    carInfo.yearSold = 0
+    carInfo.priceSold = 0
+  else:
+    carInfo.sold = True
+    if bool(year_sold) == True:
+      carInfo.yearSold = int(year_sold)
+    if bool(price_sold) == True:
+      carInfo.priceSold = int(price_sold)
 
   db.session.commit()
   return 'test'
 
+@app.route('/authenticate', methods=['POST'])
+def authenticate():
+  code = request.json['code']
+  code = ''.join(str(e) for e in code)
+  print('code-->>', code)
+
+  authenticate = False
+  if code == '1122':
+    authenticate = 'admin'
+  elif code == '0123': 
+    authenticate = 'Omar'
+  elif code == '4444':
+    authenticate = 'David'
+
+  return json.dumps(authenticate)
+
+@app.route('/fetchpartners', methods=['GET'])
+def fetchPartners():
+  # cars = CarInformation.query.all()
+  # partners = []
+  # for row in cars:
+  #   if row.partner not in partners:
+  #     partners.append(row.partner)
+
+  partners = [
+    'admin',
+    'Omar',
+    'David'
+  ]
+
+  return json.dumps(partners)
 
 def FixImage(img, max_width=None, max_height=None):
   '''
