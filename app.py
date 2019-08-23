@@ -8,6 +8,7 @@ from PIL import Image
 pymysql.install_as_MySQLdb()
 
 app = Flask(__name__, static_folder='./images')
+# $env:FLASK_ENV = "development"
 
 # # FOR SERVER
 # server_path = '/home/uriel621/be-carlist/images/cars'
@@ -92,6 +93,8 @@ def upload():
 
     path = '{}/{}'.format(server_path, lastCarInfoId)
     os.makedirs(path)
+
+    request.files['image-0'].filename = 'MAIN-' + request.files['image-0'].filename
 
     for img in request.files:
       im = Image.open(request.files[img])
