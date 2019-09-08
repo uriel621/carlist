@@ -94,10 +94,10 @@ def upload():
     path = '{}/{}'.format(server_path, lastCarInfoId)
     os.makedirs(path)
 
-    request.files['image-0'].filename = 'MAIN-' + request.files['image-0'].filename
 
     for img in request.files:
       im = Image.open(request.files[img])
+      request.files[img].filename = '{}-{}'.format(img, request.files[img].filename)
       saved_path = '{}/{}/{}'.format(server_path, lastCarInfoId, request.files[img].filename)
       FixImage(im).save(saved_path, optimize=True, quality=25)
 
@@ -118,6 +118,7 @@ def upload():
       car_list = []
       cars_directory = os.listdir('{}/{}'.format(server_path, row.id))
       for link in cars_directory:
+          print(link)
           car_list.append('{}/{}/{}'.format(appended_link, row.id, link))
       location['images'] = car_list
       result.append(location)
