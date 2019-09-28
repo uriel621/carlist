@@ -115,10 +115,10 @@ def upload():
       location['cost'] = row.cost
       location['cleanTitle'] = row.cleanTitle
       location['notes'] = row.notes
+
       car_list = []
       cars_directory = os.listdir('{}/{}'.format(server_path, row.id))
       for link in cars_directory:
-          print(link)
           car_list.append('{}/{}/{}'.format(appended_link, row.id, link))
       location['images'] = car_list
       result.append(location)
@@ -321,6 +321,59 @@ def authenticate():
     authenticate = 'David'
 
   return json.dumps(authenticate)
+
+
+
+@app.route('/uploadimages/<int:carId>', methods=['POST'])
+def uploadImages(carId):
+  for img in request.files:
+    print(request.files[img].filename)
+    im = Image.open(request.files[img])
+    request.files[img].filename = '{}-{}'.format(img, request.files[img].filename)
+    saved_path = '{}/{}/{}'.format(server_path, carId, request.files[img].filename)
+    FixImage(im).save(saved_path, optimize=True, quality=25)
+
+  return 'ji'
+
+
+@app.route('/makemainimage', methods=['POST'])
+def makeMainImage():
+  currentMain = request.json['currentMain']
+  newMain = request.json['newMain']
+
+  newIndex = newMain.rindex('/')
+
+  firstHalf = newMain[:newIndex + 1]
+  lastHalf = newMain[newIndex + 2:]
+
+  newPath = newMain[newIndex + 1:].index('-')
+  newPath = newMain[newIndex + 1:][:newPath]
+  newMain = '{}0{}'.format(firstHalf, lastHalf)
+
+
+  newIndex = currentMain.rindex('/')
+  firstHalf = currentMain[:newIndex + 1]
+  lastHalf = currentMain[newIndex + 2:]
+
+  currentMain = '{}{}{}'.format(firstHalf, newPath, lastHalf)
+
+
+  # olc = './'.format(request.json['newMain'])
+  # olcz = './'.format(newMain)
+  # olm = './'.format(request.json['currentMain'])
+  # olmz = './'.format(currentMain)
+  os.rename('./{}'.format(request.json['newMain']), './{}'.format(newMain))
+  os.rename('./{}'.format(request.json['currentMain']), './{}'.format(currentMain))
+  # print('firstHalf', firstHalf)
+  # print('lastHalf', lastHalf)
+  # print('newPath', newPath)
+
+
+
+  # print('newIndex', newIndex)
+  # print('other', other)
+
+  return '???'
 
 @app.route('/fetchpartners', methods=['GET'])
 def fetchPartners():
