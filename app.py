@@ -8,7 +8,6 @@ from PIL import Image
 pymysql.install_as_MySQLdb()
 
 app = Flask(__name__, static_folder='./images')
-# $env:FLASK_ENV = "development"
 
 # # FOR SERVER
 # server_path = '/home/uriel621/be-carlist/images/cars'
