@@ -9,18 +9,18 @@ pymysql.install_as_MySQLdb()
 
 app = Flask(__name__, static_folder='./images')
 
-# # FOR SERVER
-# server_path = '/home/uriel621/be-carlist/images/cars'
-# appended_link = 'http://uriel.sellingcrap.com/images/cars'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uriel621:mercerst@uriel621.mysql.pythonanywhere-services.com/uriel621$cars'
+# FOR SERVER
+server_path = '/home/uriel621/be-carlist/images/cars'
+appended_link = 'http://uriel.sellingcrap.com/images/cars'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uriel621:mercerst.13@uriel621.mysql.pythonanywhere-services.com/uriel621$cars'
 
-# FOR DEV
-server_path = './images/cars'
-appended_link = 'http://localhost:5000/images/cars'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/test'
+# # FOR DEV
+# server_path = './images/cars'
+# appended_link = 'http://localhost:5000/images/cars'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/carlist'
 
 db = SQLAlchemy(app)
-CORS(app)
+CORS(app, supports_credentials=True)
 
 @app.route('/')
 def index():
@@ -123,6 +123,47 @@ def upload():
       result.append(location)
 
     return json.dumps(result)
+
+
+@app.route('/uploadcar', methods=['POST'])
+def uploadcar():
+  year = request.form['year']
+  brand = request.form['brand']
+  model = request.form['model']
+  cost = request.form['cost']
+  cleanTitle = request.form['cleanTitle']
+  notes = request.form['notes']
+  partner = request.form['partner']
+
+  if cleanTitle == 'true':
+    cleanTitle = True
+  elif cleanTitle == 'false':
+    cleanTitle = False
+
+  if partner != 'admin' and partner != 'Omar' and partner != 'David':
+    return 'DENIED'
+
+  sold = False
+  priceSold = '0'
+  yearSold = 0
+
+  CarInfo = CarInformation(year, brand, model, cost, cleanTitle, notes, sold, priceSold, yearSold, partner)
+  db.session.add(CarInfo)
+  db.session.commit()
+
+  lastCarInfoId = CarInformation.query.order_by(CarInformation.id.desc()).first().id
+
+  path = '{}/{}'.format(server_path, lastCarInfoId)
+  os.makedirs(path)
+
+
+  for img in request.files:
+    im = Image.open(request.files[img])
+    request.files[img].filename = '{}-{}'.format(img, request.files[img].filename)
+    saved_path = '{}/{}/{}'.format(server_path, lastCarInfoId, request.files[img].filename)
+    FixImage(im).save(saved_path, optimize=True, quality=25)
+
+  return 'Success'
 
 @app.route('/carinfo/<int:carId>')
 def loadCarDetails(carId):

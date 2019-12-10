@@ -1,5 +1,6 @@
 # dependencies
 /__pycache__
+/app.pyc
 
 # images
 /images
