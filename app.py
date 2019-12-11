@@ -5,6 +5,9 @@ from flask_cors import CORS
 import pymysql
 from PIL import Image
 
+import sys
+print('Python Version--->', sys.version)
+
 pymysql.install_as_MySQLdb()
 
 app = Flask(__name__, static_folder='./images')
@@ -13,7 +16,7 @@ app = Flask(__name__, static_folder='./images')
 server_path = '/home/uriel621/be-carlist/images/cars'
 appended_link = 'http://uriel.sellingcrap.com/images/cars'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uriel621:mercerst.13@uriel621.mysql.pythonanywhere-services.com/uriel621$cars'
-
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # # FOR DEV
 # server_path = './images/cars'
 # appended_link = 'http://localhost:5000/images/cars'
