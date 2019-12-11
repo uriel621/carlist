@@ -12,15 +12,24 @@ pymysql.install_as_MySQLdb()
 
 app = Flask(__name__, static_folder='./images')
 
-# FOR SERVER
+basedir = os.path.abspath(os.path.dirname(__file__))
+print('BASEDIR', basedir)
+# # FOR SERVER
+# server_path = '/home/uriel621/be-carlist/images/cars'
+# appended_link = 'http://uriel.sellingcrap.com/images/cars'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uriel621:mercerst.13@uriel621.mysql.pythonanywhere-services.com/uriel621$cars'
+
+# FOR SERVER (Heroku)
 server_path = '/home/uriel621/be-carlist/images/cars'
 appended_link = 'http://uriel.sellingcrap.com/images/cars'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uriel621:mercerst.13@uriel621.mysql.pythonanywhere-services.com/uriel621$cars'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 # # FOR DEV
 # server_path = './images/cars'
 # appended_link = 'http://localhost:5000/images/cars'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/carlist'
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 CORS(app, supports_credentials=True)
