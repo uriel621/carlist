@@ -19,10 +19,12 @@ print('BASEDIR', basedir)
 # appended_link = 'http://uriel.sellingcrap.com/images/cars'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uriel621:mercerst.13@uriel621.mysql.pythonanywhere-services.com/uriel621$cars'
 
-# FOR DEV
+# FOR BlueHost
 server_path = './images/cars'
 appended_link = 'https://be-carlist.herokuapp.com/images/cars'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://hzmnrnmy_uriel:mercerst.13@75.161.139.106:3306/hzmnrnmy_carlist'
+# conn = pymysql.connect(host="75.161.139.106", user="hzmnrnmy_uriel", password="mercerst.13", db="hzmnrnmy_carlist")
+# cursor = conn.cursor()
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://hzmnrnmy_uriel:mercerst.13@50.87.249.228:3306/hzmnrnmy_carlist'
 
 # # FOR DEV
 # server_path = './images/cars'
