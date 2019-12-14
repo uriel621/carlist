@@ -11,18 +11,18 @@ print('Python Version--->', sys.version)
 pymysql.install_as_MySQLdb()
 
 app = Flask(__name__, static_folder='./images')
-
 basedir = os.path.abspath(os.path.dirname(__file__))
 print('BASEDIR', basedir)
+
 # # FOR SERVER
 # server_path = '/home/uriel621/be-carlist/images/cars'
 # appended_link = 'http://uriel.sellingcrap.com/images/cars'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uriel621:mercerst.13@uriel621.mysql.pythonanywhere-services.com/uriel621$cars'
 
-# FOR SERVER (Heroku)
-server_path = '/home/uriel621/be-carlist/images/cars'
-appended_link = 'http://uriel.sellingcrap.com/images/cars'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uriel621:mercerst.13@uriel621.mysql.pythonanywhere-services.com/uriel621$cars'
+# FOR DEV
+server_path = './images/cars'
+appended_link = 'https://be-carlist.herokuapp.com/images/cars'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://hzmnrnmy_uriel:mercerst.13@50.87.249.228:3306/hzmnrnmy_carlist'
 
 # # FOR DEV
 # server_path = './images/cars'
@@ -136,6 +136,28 @@ def upload():
 
     return json.dumps(result)
 
+@app.route('/fetchcars', methods=['GET'])
+def fetchcars():
+  cars = CarInformation.query.all()
+  result = []
+  for row in cars:
+    location = {}
+    location['id'] = row.id
+    location['year'] = int(row.year)
+    location['brand'] = row.brand
+    location['model'] = row.model
+    location['cost'] = row.cost
+    location['cleanTitle'] = row.cleanTitle
+    location['notes'] = row.notes
+
+    car_list = []
+    cars_directory = os.listdir('{}/{}'.format(server_path, row.id))
+    for link in cars_directory:
+        car_list.append('{}/{}/{}'.format(appended_link, row.id, link))
+    location['images'] = car_list
+    result.append(location)
+
+  return json.dumps(result)
 
 @app.route('/uploadcar', methods=['POST'])
 def uploadcar():
