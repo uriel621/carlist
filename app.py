@@ -22,7 +22,7 @@ print('BASEDIR', basedir)
 # FOR DEV
 server_path = './images/cars'
 appended_link = 'https://be-carlist.herokuapp.com/images/cars'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://hzmnrnmy_uriel:mercerst.13@50.87.249.228:3306/hzmnrnmy_carlist'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://hzmnrnmy_uriel:mercerst.13@75.161.139.106:3306/hzmnrnmy_carlist'
 
 # # FOR DEV
 # server_path = './images/cars'
