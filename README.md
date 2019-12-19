@@ -34,3 +34,8 @@ Create model in python shell
 
   4) setattr(user, 'no_of_logins', user.no_of_logins+1)
     session.commit()
+
+  pip freeze > requirements.txt
+
+   heroku git:remote -a be-carlist
+   git push heroku master

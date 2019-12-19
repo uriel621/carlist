@@ -11,23 +11,27 @@ print('Python Version--->', sys.version)
 pymysql.install_as_MySQLdb()
 
 app = Flask(__name__, static_folder='./images')
-basedir = os.path.abspath(os.path.dirname(__file__))
-print('BASEDIR', basedir)
+# basedir = os.path.abspath(os.path.dirname(__file__))
 
 # # FOR SERVER
 # server_path = '/home/uriel621/be-carlist/images/cars'
 # appended_link = 'http://uriel.sellingcrap.com/images/cars'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uriel621:mercerst.13@uriel621.mysql.pythonanywhere-services.com/uriel621$cars'
 
-# # FOR BlueHost
-# server_path = './images/cars'
-# appended_link = 'https://be-carlist.herokuapp.com/images/cars'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://hzmnrnmy_uriel:mercerst.13@50.87.249.228:3306/hzmnrnmy_carlist'
-
-# FOR DEV
+# FOR BlueHost
 server_path = './images/cars'
-appended_link = 'http://localhost:5000/images/cars'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/carlist'
+appended_link = 'https://be-carlist.herokuapp.com/images/cars'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://hzmnrnmy_uriel:mercerst.13@50.87.249.228:3306/hzmnrnmy_carlist'
+
+# # FOR DEV
+# # Azure Credentials
+# account = app.config['ACCOUNT'] = 'carimages621'
+# key = app.config['STORAGE_KEY'] = '9roKuaNkbwS0dShYe8/PiyQL4De1vlHDjLihdXH5UsfBC0XXhwxKtrGxTYX2IP7s9xUOAv+s4d7z3IptTyDM9A=='
+# container = app.config['CONTAINER'] = 'cars'
+
+# server_path = './images/cars'
+# appended_link = 'http://localhost:5000/images/cars'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/carlist'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
