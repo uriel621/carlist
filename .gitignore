@@ -1,6 +1,8 @@
 # dependencies
 /__pycache__
 /app.pyc
+/pipfile
+/pipfile.lock
 
 # images
 /images

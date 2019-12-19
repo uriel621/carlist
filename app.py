@@ -5,6 +5,8 @@ from flask_cors import CORS
 import pymysql
 from PIL import Image
 
+from azure.storage.blob import BlockBlobService
+
 import sys
 print('Python Version--->', sys.version)
 
@@ -13,25 +15,25 @@ pymysql.install_as_MySQLdb()
 app = Flask(__name__, static_folder='./images')
 # basedir = os.path.abspath(os.path.dirname(__file__))
 
+# Azure Credentials
+account = app.config['ACCOUNT'] = 'carimages621'
+key = app.config['STORAGE_KEY'] = '9roKuaNkbwS0dShYe8/PiyQL4De1vlHDjLihdXH5UsfBC0XXhwxKtrGxTYX2IP7s9xUOAv+s4d7z3IptTyDM9A=='
+# container = app.config['CONTAINER'] = 'cars'
+blob_service = BlockBlobService(account_name=account, account_key=key)
 # # FOR SERVER
 # server_path = '/home/uriel621/be-carlist/images/cars'
 # appended_link = 'http://uriel.sellingcrap.com/images/cars'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uriel621:mercerst.13@uriel621.mysql.pythonanywhere-services.com/uriel621$cars'
 
 # FOR BlueHost
-server_path = './images/cars'
-appended_link = 'https://be-carlist.herokuapp.com/images/cars'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://hzmnrnmy_uriel:mercerst.13@50.87.249.228:3306/hzmnrnmy_carlist'
-
-# # FOR DEV
-# # Azure Credentials
-# account = app.config['ACCOUNT'] = 'carimages621'
-# key = app.config['STORAGE_KEY'] = '9roKuaNkbwS0dShYe8/PiyQL4De1vlHDjLihdXH5UsfBC0XXhwxKtrGxTYX2IP7s9xUOAv+s4d7z3IptTyDM9A=='
-# container = app.config['CONTAINER'] = 'cars'
-
 # server_path = './images/cars'
-# appended_link = 'http://localhost:5000/images/cars'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/carlist'
+# appended_link = 'https://be-carlist.herokuapp.com/images/cars'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://hzmnrnmy_uriel:mercerst.13@50.87.249.228:3306/hzmnrnmy_carlist'
+
+# FOR DEV
+server_path = './images/cars'
+appended_link = 'http://localhost:5000/images/cars'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/carlist'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -142,6 +144,7 @@ def upload():
 
 @app.route('/fetchcars', methods=['GET'])
 def fetchcars():
+  containers = blob_service.list_blobs(container_name='cars')
   cars = CarInformation.query.all()
   result = []
   for row in cars:
@@ -154,11 +157,19 @@ def fetchcars():
     location['cleanTitle'] = row.cleanTitle
     location['notes'] = row.notes
 
-    car_list = []
-    cars_directory = os.listdir('{}/{}'.format(server_path, row.id))
-    for link in cars_directory:
-        car_list.append('{}/{}/{}'.format(appended_link, row.id, link))
-    location['images'] = car_list
+    # car_list = []
+    # cars_directory = os.listdir('{}/{}'.format(server_path, row.id))
+
+    car_list_two = []
+    for img in containers:
+      directory_id = img.name.split('/')[0]
+      if str(row.id) == directory_id:
+        url = 'https://{}.blob.core.windows.net/cars/{}'.format(account, img.name)
+        car_list_two.append(url)
+
+    # for link in cars_directory:
+    #     car_list.append('{}/{}/{}'.format(appended_link, row.id, link))
+    location['images'] = car_list_two
     result.append(location)
 
   return json.dumps(result)
