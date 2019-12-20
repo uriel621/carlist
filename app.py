@@ -5,7 +5,7 @@ from flask_cors import CORS
 import pymysql
 from PIL import Image
 
-from azure.storage.blob import BlockBlobService
+from azure.storage.blob import BlockBlobService, ContentSettings
 
 import sys
 print('Python Version--->', sys.version)
@@ -15,29 +15,29 @@ pymysql.install_as_MySQLdb()
 app = Flask(__name__, static_folder='./images')
 # basedir = os.path.abspath(os.path.dirname(__file__))
 
-# Azure Credentials
-account = app.config['ACCOUNT'] = 'carimages621'
-key = app.config['STORAGE_KEY'] = '9roKuaNkbwS0dShYe8/PiyQL4De1vlHDjLihdXH5UsfBC0XXhwxKtrGxTYX2IP7s9xUOAv+s4d7z3IptTyDM9A=='
-# container = app.config['CONTAINER'] = 'cars'
-blob_service = BlockBlobService(account_name=account, account_key=key)
 # # FOR SERVER
 # server_path = '/home/uriel621/be-carlist/images/cars'
 # appended_link = 'http://uriel.sellingcrap.com/images/cars'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uriel621:mercerst.13@uriel621.mysql.pythonanywhere-services.com/uriel621$cars'
 
 # FOR BlueHost
-# server_path = './images/cars'
-# appended_link = 'https://be-carlist.herokuapp.com/images/cars'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://hzmnrnmy_uriel:mercerst.13@50.87.249.228:3306/hzmnrnmy_carlist'
+appended_link = 'https://be-carlist.herokuapp.com/images/cars'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://hzmnrnmy_uriel:mercerst.13@50.87.249.228:3306/hzmnrnmy_carlist'
+# Azure Credentials - Production
+account = app.config['ACCOUNT'] = '4ever'
+key = app.config['STORAGE_KEY'] = '6rjyBoPAy19Ou2Co7uM9Sd8MtmUZldeoTomD1mhzeFCsFMvgS+rmY4AlPQzCAh/XF2/yY0OJbfdNWdIp1hbq1w=='
 
-# FOR DEV
-server_path = './images/cars'
-appended_link = 'http://localhost:5000/images/cars'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/carlist'
+# # FOR DEV
+# appended_link = 'http://localhost:5000/images/cars'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/carlist'
+# # Azure Credentials - Development
+# account = app.config['ACCOUNT'] = 'ever'
+# key = app.config['STORAGE_KEY'] = 'Eb8GJ/ehX38W7b1n7SBj7oCBjpKepA7mwNVY4SrhU/YcCfMQD/ci3DEoVifk5W3VFVjnla54R+wb8BRwa3P4Yw=='
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+blob_service = BlockBlobService(account_name=account, account_key=key)
 db = SQLAlchemy(app)
+
 CORS(app, supports_credentials=True)
 
 @app.route('/')
@@ -202,15 +202,21 @@ def uploadcar():
 
   lastCarInfoId = CarInformation.query.order_by(CarInformation.id.desc()).first().id
 
-  path = '{}/{}'.format(server_path, lastCarInfoId)
-  os.makedirs(path)
-
+  # path = '{}/{}'.format(server_path, lastCarInfoId)
+  # os.makedirs(path)
 
   for img in request.files:
-    im = Image.open(request.files[img])
-    request.files[img].filename = '{}-{}'.format(img, request.files[img].filename)
-    saved_path = '{}/{}/{}'.format(server_path, lastCarInfoId, request.files[img].filename)
-    FixImage(im).save(saved_path, optimize=True, quality=25)
+    # im = Image.open(request.files[img])
+    # request.files[img].filename = '{}-{}'.format(img, request.files[img].filename)
+    # saved_path = '{}/{}/{}'.format(server_path, lastCarInfoId, request.files[img].filename)
+    # FixImage(im).save(saved_path, optimize=True, quality=25)
+    
+    blob_service.create_blob_from_stream(
+      'cars/{}'.format(lastCarInfoId),
+      request.files[img].filename,
+      request.files[img],
+      content_settings=ContentSettings(content_type='image/png')
+    )
 
   return 'Success'
 
@@ -231,13 +237,19 @@ def loadCarDetails(carId):
 
 @app.route('/carimages/<int:carId>')
 def loadCarImages(carId):
+  containers = blob_service.list_blobs(container_name='cars')
   carImages = {
     'images': []
   }
-  cars_directory = os.listdir('{}/{}'.format(server_path, carId))
-  for link in cars_directory:
-      carImages['images'].append('{}/{}/{}'.format(appended_link, carId, link))
+  # cars_directory = os.listdir('{}/{}'.format(server_path, carId))
+  # for link in cars_directory:
+  #     carImages['images'].append('{}/{}/{}'.format(appended_link, carId, link))
 
+  for img in containers:
+    directory_id = img.name.split('/')[0]
+    if str(carId) == directory_id:
+      url = 'https://{}.blob.core.windows.net/cars/{}'.format(account, img.name)
+      carImages['images'].append(url)
   return json.dumps(carImages)
 
 
